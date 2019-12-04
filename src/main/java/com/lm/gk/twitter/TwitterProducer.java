@@ -10,10 +10,15 @@ import com.twitter.hbc.core.endpoint.StatusesFilterEndpoint;
 import com.twitter.hbc.core.processor.StringDelimitedProcessor;
 import com.twitter.hbc.httpclient.auth.Authentication;
 import com.twitter.hbc.httpclient.auth.OAuth1;
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.serialization.StringSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -21,6 +26,11 @@ import java.util.concurrent.TimeUnit;
 public class TwitterProducer {
 
     public static Logger logger = LoggerFactory.getLogger(TwitterProducer.class.getName());
+
+    private String consumerKey = "";
+    private String consumerSecret = "";
+    private String token = "";
+    private String secret = "";
 
     public static void main(String[] args) {
         TwitterProducer tp = new TwitterProducer();
@@ -34,6 +44,7 @@ public class TwitterProducer {
 
         BlockingQueue<String> msgQueue = new LinkedBlockingQueue<>(1000);
         Client client = createTwitterClient(msgQueue);
+        client.connect();
 
         while (!client.isDone()) {
             String msg = null;
@@ -49,10 +60,7 @@ public class TwitterProducer {
         }
     }
 
-    String consumerKey = "Qvx2bNKCl5Rjgpefvyx1pnnF9";
-    String consumerSecret = "pw0e7KGub7DtVfYOdpTVwRwHfJ6HUnDlvMu9HaUwHmonscmhCl";
-    String token = "3029879643-qubhsbTFe88OLkwnXio65L5fxYE1ET3Z5JvP7r6";
-    String secret = "dnPnRHzRGnwREf4CnfcMcv0erUo8CQIKmjMO9Z23RQbJV";
+
 
     public Client createTwitterClient(BlockingQueue<String> msgQueue) {
         Hosts hosebirdHosts = new HttpHosts(Constants.STREAM_HOST);
@@ -74,9 +82,18 @@ public class TwitterProducer {
                 .processor(new StringDelimitedProcessor(msgQueue));
 
         Client hosebirdClient = builder.build();
-// Attempts to establish a connection.
-        hosebirdClient.connect();
-
         return hosebirdClient;
+    }
+
+    public KafkaProducer<String,String> createKafkaProducer(){
+        Properties properties = new Properties();
+        properties.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,"127.0.0.1:9092");
+        properties.setProperty(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
+        properties.setProperty(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
+
+        KafkaProducer<String,String> producer = new KafkaProducer<String, String>(properties);
+       // ProducerRecord<String,String> record = new ProducerRecord<>("first_topic", "hello deepak");
+
+
     }
 }
