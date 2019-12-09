@@ -6,7 +6,11 @@
 
     <groupId>com.gaurav.learn</groupId>
     <artifactId>kafka</artifactId>
+    <packaging>pom</packaging>
     <version>1.0</version>
+    <modules>
+        <module>kafka-consumer-es</module>
+    </modules>
 
     <dependencies>
         <!-- https://mvnrepository.com/artifact/org.apache.kafka/kafka-clients -->
